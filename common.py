@@ -39,10 +39,14 @@ class Colors:
         cls.ENDC = '\033[0m'
 
 
-
 def git(*args, repository_path='.'):
-    return subprocess.check_output(["git"] + list(args), cwd=repository_path,
+    try:
+         subprocess.check_output(["git"] + list(args), cwd=repository_path,
                                    stderr=subprocess.STDOUT).decode()
+    except subprocess.CalledProcessError as e:
+        print(e.stdout)
+        raise e
+
 
 def accept_command(commands):
     """Search @commands and returns the first found absolute path."""
@@ -53,6 +57,7 @@ def accept_command(commands):
 
     return None
 
+
 def get_meson():
     meson = os.path.join(ROOTDIR, 'meson', 'meson.py')
     if os.path.exists(meson):
@@ -62,3 +67,8 @@ def get_meson():
 
     return accept_command(["meson.py", "meson"]), accept_command(["mesonconf.py", "mesonconf"]), \
         accept_command(["mesonintrospect.py", "mesonintrospect"])
+
+
+def prepend_env_var(env, var, value):
+    env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
+    env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script for generating the Makefiles."""
+"""Setup meson based GStreamer uninstalled environment based on msys2."""
 
 import argparse
 import itertools
@@ -12,6 +12,7 @@ import tempfile
 
 from common import git
 from setup import GstBuildConfigurer
+from common import prepend_env_var
 
 
 PROJECTNAME = "GStreamer build"
@@ -91,27 +92,11 @@ class Msys2Configurer(GstBuildConfigurer):
             if f.endswith('.dll'):
                 self.make_lib_if_needed(os.path.join(base, f))
 
-    def apply_hacks(self):
-        moved_pc_files = [
-            ('schroedinger-1.0.pc', 'FIXME: building libgstschroedinger'
-                'fails because of some weird issue with a version of '
-                'math.h that it pull in.'),
-            ('libopenjp2.pc', 'FIXME: Getting spurious missing internal'
-             'symbols from libopenjp2 when linking'),
-            ('openssl.pc', 'FIXME: Getting spurious missing internal'
-             'symbols from libopenjp2 when linking, somehow similare to'
-                ' http://stackoverflow.com/questions/21758275/fatal-error-lnk1120-19-unresolved-externals'),
-        ]
-
-        for f, r in moved_pc_files:
-            print("Hidding %s " % f)
-            pc_file = os.path.join(
-                self.options.msys2_path, 'mingw64', 'lib', 'pkgconfig', f)
-            try:
-                os.rename(pc_file, pc_file + '.save')
-            except FileNotFoundError:
-                print("Could not move %s to %s" % (pc_file, pc_file + '.save'))
-                pass
+    def get_configs(self):
+        return GstBuildConfigurer.get_configs(self) + [
+            '-D' + m + ':disable_introspection=true' for m in [
+                'gst-devtools', 'gstreamer', 'gst-plugins-base',
+                'gst-editing-services']]
 
     def setup(self):
         if not os.path.exists(self.options.msys2_path):
@@ -120,10 +105,10 @@ class Msys2Configurer(GstBuildConfigurer):
                   " if you did not install in the default directory.")
             return False
 
-        for path in ['mingw64/bin', 'bin', 'usr/bin']:
-            os.environ['PATH'] = os.environ.get(
-                'PATH', '') + os.pathsep + os.path.normpath(os.path.join(self.options.msys2_path, path))
-        os.environ['PATH'] = os.environ['PATH'].replace(';;', ';')
+        for path in ['usr/bin', 'bin', 'mingw64/bin']:
+            prepend_env_var(os.environ, 'PATH', os.path.normpath(os.path.join(self.options.msys2_path, path)))
+        prepend_env_var(os.environ, 'PYTHONPATH', os.path.normpath(os.path.join(
+            self.options.msys2_path, 'lib', 'python-3.5', 'site-packages')))
         os.environ['PKG_CONFIG_PATH'] = os.environ.get(
             'PKG_CONFIG_PATH', '') + ':/mingw64/lib/pkgconfig:/mingw64/share/pkgconfig'
 
@@ -138,13 +123,14 @@ class Msys2Configurer(GstBuildConfigurer):
         else:
             print('\nDONE')
 
-        if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')):
-            self.apply_hacks()
+        if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')) or \
+                self.options.reconfigure:
             print("Making libs")
             self.make_libs()
             print("Done making .lib files.")
             print("Running meson")
-            self.configure_meson()
+            if not self.configure_meson():
+                return False
 
         print("Getting into msys2 environment")
         try:

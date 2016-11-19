@@ -12,13 +12,9 @@ import sys
 import tempfile
 
 from common import get_meson
+from common import prepend_env_var
 
 SCRIPTDIR = os.path.abspath(os.path.dirname(__file__))
-
-
-def prepend_env_var(env, var, value):
-    env[var] = os.pathsep + value + os.pathsep + env.get(var, "")
-    env[var] = env[var].replace(os.pathsep + os.pathsep, os.pathsep).strip(os.pathsep)
 
 
 def get_subprocess_env(options):

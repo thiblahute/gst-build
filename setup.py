@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script for generating the Makefiles."""
+"""Setup meson based GStreamer uninstalled environment."""
 
 import argparse
 import os
@@ -55,6 +55,8 @@ class GstBuildConfigurer:
                   " $ ninja -C %s" % build_dir)
         except subprocess.CalledProcessError:
             return False
+
+        return True
 
     def setup(self):
         return self.configure_meson()
