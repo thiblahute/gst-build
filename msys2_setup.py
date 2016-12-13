@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script for generating the Makefiles."""
+"""Setup meson based GStreamer uninstalled environment based on msys2."""
 
 import argparse
 import itertools
@@ -91,6 +91,12 @@ class Msys2Configurer(GstBuildConfigurer):
             if f.endswith('.dll'):
                 self.make_lib_if_needed(os.path.join(base, f))
 
+    def get_configs(self):
+        return GstBuildConfigurer.get_configs(self) + [
+            '-D' + m + ':disable_introspection=true' for m in [
+                'gst-devtools', 'gstreamer', 'gst-plugins-base',
+                'gst-editing-services']]
+
     def setup(self):
         if not os.path.exists(self.options.msys2_path):
             print("msys2 not found in %s. Please make sure to install"
@@ -116,12 +122,14 @@ class Msys2Configurer(GstBuildConfigurer):
         else:
             print('\nDONE')
 
-        if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')):
-            print("Making libs")
-            self.make_libs()
+        print("Making libs")
+        self.make_libs()
+        if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')) or \
+                self.options.reconfigure:
             print("Done making .lib files.")
             print("Running meson")
-            self.configure_meson()
+            if not self.configure_meson():
+                return False
 
         print("Getting into msys2 environment")
         try:
