@@ -56,6 +56,8 @@ class GstBuildConfigurer:
         except subprocess.CalledProcessError:
             return False
 
+        return True
+
     def setup(self):
         return self.configure_meson()
 
