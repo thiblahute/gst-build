@@ -91,28 +91,6 @@ class Msys2Configurer(GstBuildConfigurer):
             if f.endswith('.dll'):
                 self.make_lib_if_needed(os.path.join(base, f))
 
-    def apply_hacks(self):
-        moved_pc_files = [
-            ('schroedinger-1.0.pc', 'FIXME: building libgstschroedinger'
-                'fails because of some weird issue with a version of '
-                'math.h that it pull in.'),
-            ('libopenjp2.pc', 'FIXME: Getting spurious missing internal'
-             'symbols from libopenjp2 when linking'),
-            ('openssl.pc', 'FIXME: Getting spurious missing internal'
-             'symbols from libopenjp2 when linking, somehow similare to'
-                ' http://stackoverflow.com/questions/21758275/fatal-error-lnk1120-19-unresolved-externals'),
-        ]
-
-        for f, r in moved_pc_files:
-            print("Hidding %s " % f)
-            pc_file = os.path.join(
-                self.options.msys2_path, 'mingw64', 'lib', 'pkgconfig', f)
-            try:
-                os.rename(pc_file, pc_file + '.save')
-            except FileNotFoundError:
-                print("Could not move %s to %s" % (pc_file, pc_file + '.save'))
-                pass
-
     def setup(self):
         if not os.path.exists(self.options.msys2_path):
             print("msys2 not found in %s. Please make sure to install"
@@ -139,7 +117,6 @@ class Msys2Configurer(GstBuildConfigurer):
             print('\nDONE')
 
         if not os.path.exists(os.path.join(source_path, 'build', 'build.ninja')):
-            self.apply_hacks()
             print("Making libs")
             self.make_libs()
             print("Done making .lib files.")
