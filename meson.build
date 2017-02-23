@@ -11,6 +11,7 @@ glib_req = '>= 2.40.0'
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
+documented_projects = []
 # Make it possible to use msys2 built zlib which fails
 # when not using the mingw toolchain as it uses unistd.h
 if not meson.is_subproject() and cc.get_id() == 'msvc'
@@ -61,24 +62,31 @@ vaapi_opt = get_option('vaapi')
 devtools_opt = get_option('devtools')
 ges_opt = get_option('ges')
 subprojects = {
-    'gstreamer': {},
-    'gst-plugins-base': {},
-    'gst-plugins-good': {},
-    'gst-plugins-bad': { 'option': get_option('bad') },
-    'gst-plugins-ugly': { 'option': get_option('ugly') },
+    'gstreamer': {'build-hotdoc': true},
+    'gst-plugins-base': {'build-hotdoc': true},
+    'gst-plugins-good': {'build-hotdoc': true},
+    'gst-plugins-bad': { 'option': get_option('bad'), 'build-hotdoc': true },
+    'gst-plugins-ugly': { 'option': get_option('ugly'), 'build-hotdoc': true },
     'gst-python': { 'option': python_opt, 'dependencies': [dependency('pygobject-3.0', required : python_opt)] },
     'gst-omx': { 'option': get_option('omx'), },
-    'gst-libav': { 'option': get_option('libav'), 'dependencies': libav_deps},
+    'gst-libav': { 'option': get_option('libav'), 'dependencies': libav_deps, 'build-hotdoc': true},
     'gstreamer-vaapi': {
       'option': vaapi_opt,
-      'dependencies': [dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : vaapi_opt)]
+      'dependencies': [dependency('libva', version: ['>= 0.30.4', '!= 0.99.0'], required : vaapi_opt)],
+      'build-hotdoc': true
     },
     'gst-devtools': {
       'option': devtools_opt,
       'dependencies': [dependency('json-glib-1.0', required: devtools_opt)],
+      'build-hotdoc': true,
     },
-    'gst-editing-services': { 'option': ges_opt, 'dependencies': [dependency('libxml-2.0', required : ges_opt)] },
-    'gst-rtsp-server': { 'option': get_option('rtsp_server') },
+    'gst-editing-services': {
+      'option': ges_opt,
+      'dependencies': [dependency('libxml-2.0',
+      required : ges_opt)],
+      'build-hotdoc': true
+    },
+    'gst-rtsp-server': { 'option': get_option('rtsp_server'), 'build-hotdoc': true },
     'gstreamer-sharp': { 'option': get_option('sharp'), 'dependencies': sharp_deps },
 }
 
@@ -114,6 +122,9 @@ foreach project_name, build_infos: subprojects
 
     if build
       subprojects_names += [project_name]
+      if build_infos.has_key('build-hotdoc', default: false)
+        documented_projects += [project_name]
+      endif
       subproject(project_name, version: gst_version)
       cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
       if cmdres.returncode() == 0
@@ -130,8 +141,29 @@ foreach custom_subproj: get_option('custom_subprojects').split(',')
     endif
 endforeach
 
-message('Building subprojects: ' + ', '.join(subprojects_names))
+if build_machine.system() == 'windows'
+  message('Disabling hotdoc while building on Windows')
+else
+  hotdoc_p = find_program('hotdoc', required : get_option('hotdoc'))
+  if hotdoc_p.found()
+    built_doc = ''
+    foreach proj: documented_projects
+      if built_doc != ''
+        built_doc += ','
+      endif
+      built_doc += proj
+    endforeach
 
+    if built_doc != ''
+        subproject('gst-docs', default_options: 'built_subprojects=' + built_doc)
+    endif
+    message('Gst docs subprojects: ' + built_doc)
+  else
+    message('Not building documentation as hotdoc was not found')
+  endif
+endif
+
+message('Building subprojects: ' + ', '.join(subprojects_names))
 setenv = find_program('gst-uninstalled.py')
 run_target('uninstalled', command : [setenv, '--builddir=@0@'.format(meson.build_root()),
 	   '--srcdir=@0@'.format(meson.source_root()),

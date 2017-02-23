@@ -1,0 +1,5 @@
+[wrap-git]
+directory=gst-docs
+url=https://github.com/thiblahute/gst-docs.git
+push-url=ssh://git.freedesktop.org/git/gstreamer/gst-docs
+revision=hotdoc
