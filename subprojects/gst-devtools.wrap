@@ -1,5 +1,6 @@
 [wrap-git]
-directory=gst-devtools
-url=https://anongit.freedesktop.org/git/gstreamer/gst-devtools.git
-push-url=ssh://git.freedesktop.org/git/gstreamer/gst-devtools
-revision=master
+directory = gst-devtools
+url = https://github.com/thiblahute/gst-devtools
+push-url = git@github.com:thiblahute/gst-devtools
+revision = components
+

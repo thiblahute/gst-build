@@ -1,5 +1,6 @@
 [wrap-git]
-directory=gst-editing-services
-url=https://anongit.freedesktop.org/git/gstreamer/gst-editing-services.git
-push-url=ssh://git.freedesktop.org/git/gstreamer/gst-editing-services
-revision=master
+directory = gst-editing-services
+url = https://github.com/thiblahute/gst-editing-services
+push-url = git@github.com:thiblahute/gst-editing-services
+revision = components
+

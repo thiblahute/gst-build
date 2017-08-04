@@ -1,5 +1,6 @@
 [wrap-git]
-directory=gst-plugins-bad
-url=https://anongit.freedesktop.org/git/gstreamer/gst-plugins-bad.git
-push-url=ssh://git.freedesktop.org/git/gstreamer/gst-plugins-bad
-revision=master
+directory = gst-plugins-bad
+url = https://github.com/thiblahute/gst-plugins-bad
+push-url = git@github.com:thiblahute/gst-plugins-bad
+revision = components
+

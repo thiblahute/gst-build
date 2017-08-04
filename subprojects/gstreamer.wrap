@@ -1,5 +1,6 @@
 [wrap-git]
-directory=gstreamer
-url=https://anongit.freedesktop.org/git/gstreamer/gstreamer.git
-push-url=ssh://git.freedesktop.org/git/gstreamer/gstreamer
-revision=master
+directory = gstreamer
+url = https://github.com/thiblahute/gstreamer
+push-url = git@github.com:thiblahute/gstreamer
+revision = components
+
