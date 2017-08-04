@@ -98,7 +98,7 @@ class Msys2Configurer(GstBuildConfigurer):
         return GstBuildConfigurer.get_configs(self) + [
             '-D' + m + ':disable_introspection=true' for m in [
                 'gst-devtools', 'gstreamer', 'gst-plugins-base',
-                'gst-editing-services']]
+                'gst-editing-services']] + ['-Dgst-plugins-good:caca=disabled']
 
     def setup(self, args):
         if not os.path.exists(self.options.msys2_path):
