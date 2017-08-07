@@ -21,7 +21,7 @@ ROOTDIR = os.path.abspath(os.path.dirname(__file__))
 
 
 class Msys2Configurer(GstBuildConfigurer):
-    MESON_GIT = 'https://github.com/mesonbuild/meson.git'
+    MESON_GIT = 'https://github.com/thiblahute/meson.git'
     DEPENDENCIES = ['git',
                     'bison',
                     'mingw-w64-x86_64-pkg-config',
@@ -119,8 +119,8 @@ class Msys2Configurer(GstBuildConfigurer):
 
         print('Making sure meson is present in root folder... ', end='', flush=True)
         if not os.path.isdir(os.path.join(source_path, 'meson')):
-            print('\nCloning meson', flush=True)
-            git('clone', self.MESON_GIT, repository_path=source_path)
+            print('\nCloning meson components', flush=True)
+            git('clone', self.MESON_GIT, '-b', 'components', repository_path=source_path)
         else:
             print('\nDONE', flush=True)
 
