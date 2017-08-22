@@ -83,6 +83,10 @@ if not get_option('disable_rtsp_server')
     subprojects += ['gst-rtsp-server']
 endif
 
+if not get_option('disable_gstreamer_sharp') and add_languages('cs')
+    subprojects += ['gstreamer-sharp']
+endif
+
 python3 = find_program('python3')
 symlink = '''
 import os

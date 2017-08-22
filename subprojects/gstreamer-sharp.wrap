@@ -1,0 +1,4 @@
+[wrap-git]
+directory=gstreamer-sharp
+url=https://github.com/thiblahute/gstreamer-sharp.git
+revision=meson
