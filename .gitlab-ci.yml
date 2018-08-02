@@ -1,0 +1,101 @@
+image: registry.freedesktop.org/thiblahute/gst-ci/archlinux:latest
+
+stages:
+    - buildmanifest
+    - build
+    - test
+    - deploy
+
+# buildmanifest:
+#   image: registry.freedesktop.org/thiblahute/gst-ci/archlinux:latest
+#   stage: buildmanifest
+
+#   script:
+
+#   # Make a smart script to generate the manifest :-)
+#   - git clone https://git.arracacha.collabora.co.uk/git/gst-manifest.git && cd gst-manifest && git checkout jenkins-build-branch && mv default.xml ../manifest.xml
+#   - cat ../manifest.xml
+#   artifacts:
+#     paths:
+#       - manifest.xml
+
+# mesonbuild:archlinux:
+#   image: registry.freedesktop.org/thiblahute/gst-ci/archlinux:latest
+#   stage: build
+
+#   dependencies:
+#     - buildmanifest
+
+#   script:
+#   - export MAIN_DIR=$PWD
+#   - export MANIFEST=$PWD/manifest.xml
+
+#   - cd $GST_BUILD_PATH
+#   - ./git-update --manifest=$MANIFEST
+#   - meson build/ $GST_BUILD_MESON_ARGS
+#   - ninja -C build/
+#   # Clean the artifacts packages to avoid copying "useless" build products.
+#   - rm $(find build -name "*.o") $(find -name "*.a")
+#   - mv build $MAIN_DIR/
+
+#   artifacts:
+#     paths:
+#     - manifest.xml
+#     - build/
+
+# test:mesonbuild-archlinux:
+#   image: registry.freedesktop.org/thiblahute/gst-ci/archlinux:latest
+#   stage: test
+
+#   dependencies:
+#     - mesonbuild:archlinux
+
+#   script:
+#     - export MAIN_DIR=$PWD
+#     - export VALIDATE_OUTPUT=/validate-output
+
+#     - mv build /gst-build/
+#     - cd /gst-build
+#     # REMOVEME when allure patches is merged in gst-validate.
+#     - cd subprojects/gst-devtools/ && git remote add thiblahute https://github.com/thiblahute/gst-devtools/ && git fetch thiblahute && git checkout thiblahute/allure && cd -
+#     - ./gst-uninstalled.py gst-validate-launcher check validate ges --no-display --shuffle -fs -m -n  --check-bugs --fail-on-testlist-change -M $VALIDATE_OUTPUT --xunit-file $VALIDATE_OUTPUT/logs/xunit.xml --ignore-numfailures --meson-no-rebuild
+#     - mv $VALIDATE_OUTPUT/logs $MAIN_DIR/tests-logs
+
+#   artifacts:
+#     paths:
+#       - tests-logs
+
+# upload-mesonbuild-archlinux-test-results:
+#   image: registry.gitlab.gnome.org/gnome/pitivi:master
+#   stage: deploy
+
+#   dependencies:
+#     - test:mesonbuild-archlinux
+
+#   script:
+#     - (wget ${CI_PROJECT_URL}/-/jobs/artifacts/${CI_COMMIT_REF_NAME}/download?job=test-results -O history.zip && unzip history.zip && mv test-results history && ls history/) || echo "No history"
+#     - /opt/allure/bin/allure generate --clean --output test-results/ history/ tests-logs
+
+#     - RESULT_PATH=$(echo "${CI_JOB_URL}/artifacts/test-results/index.html" |sed "s/${CI_PROJECT_NAMESPACE}/-/g" | sed "s/gitlab/${CI_PROJECT_NAMESPACE}.pages/g")
+#     - printf "=========================\n\n TEST RESULTS WILL BE AVAILABLE AT ${RESULT_PATH}\n\n==================="
+
+#   artifacts:
+#     paths:
+#       - test-results
+
+pages:
+  stage: deploy
+  script:
+  - rm -Rf build/ # FIXME - REMOVEME once we can reuse cache.
+
+  - pip install --upgrade hotdoc git+https://github.com/thiblahute/meson.git@hotdoc
+  - meson build/ -Dpython=disabled
+  - ninja -C build/
+  - ninja -C build subprojects/gst-docs/GStreamer-doc
+
+  - mv build/subprojects/gst-docs/GStreamer-doc/html public/
+  artifacts:
+    paths:
+    - public
+  only:
+  - hotdoc
