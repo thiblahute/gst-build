@@ -122,10 +122,12 @@ foreach project_name, build_infos: subprojects
 
     if build
       subprojects_names += [project_name]
+      default_options = []
       if build_infos.has_key('build-hotdoc', default: false)
         documented_projects += [project_name]
+        default_options += ['disable_install_doc=true']
       endif
-      subproject(project_name, version: gst_version)
+      subproject(project_name, version: gst_version, default_options: default_options)
       cmdres = run_command(python3, '-c', symlink.format(project_name, meson.current_source_dir()))
       if cmdres.returncode() == 0
         message('Created symlink to ' + project_name)
